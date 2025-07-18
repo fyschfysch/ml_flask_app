@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>ML Inference & Training Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .block { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; margin-bottom: 30px;}
+        .block h2 { margin-top: 0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>ML Inference & Training Demo</h1>
+
+    <!-- 1. Инференс -->
+    <div class="block">
+        <h2>Инференс</h2>
+        <form id="predict-form">
+            <label for="user_id">user_id:</label>
+            <input type="number" id="user_id" name="user_id" required>
+            <label for="csv_file">CSV-файл:</label>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            <button type="submit">Сделать инференс</button>
+        </form>
+        <div id="predict-result"></div>
+    </div>
+
+    <!-- 2. Обучение модели -->
+    <div class="block">
+        <h2>Обучение модели</h2>
+        <form id="train-form">
+            <label for="train_csv_file">Обучающий CSV-файл:</label>
+            <input type="file" id="train_csv_file" name="train_csv_file" accept=".csv" required>
+            <button type="submit">Запустить обучение</button>
+        </form>
+        <div id="train-result"></div>
+    </div>
+
+    <script>
+    // --- Инференс ---
+    document.getElementById('predict-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const user_id = document.getElementById('user_id').value;
+        const file = document.getElementById('csv_file').files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('user_id', user_id);
+        formData.append('csv_file', file);
+        const response = await fetch('/predict', {
+            method: 'POST',
+            body: formData
+        });
+        const resultDiv = document.getElementById('predict-result');
+        if (response.ok) {
+            const data = await response.json();
+            resultDiv.innerHTML = '<span class="success">Результат инференса:</span><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        } else {
+            resultDiv.innerHTML = '<span class="error">Ошибка: ' + (await response.text()) + '</span>';
+        }
+    };
+
+    // --- Обучение ---
+    document.getElementById('train-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const file = document.getElementById('train_csv_file').files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('train_csv_file', file);
+        const response = await fetch('/train', {
+            method: 'POST',
+            body: formData
+        });
+        const resultDiv = document.getElementById('train-result');
+        if (response.ok) {
+            const data = await response.json();
+            resultDiv.innerHTML = '<span class="success">Модель обучена и сохранена!</span>';
+        } else {
+            resultDiv.innerHTML = '<span class="error">Ошибка: ' + (await response.text()) + '</span>';
+        }
+    };
+    </script>
+</body>
+</html>
